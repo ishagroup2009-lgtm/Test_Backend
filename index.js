@@ -379,14 +379,14 @@ app.post('/api/messages', async (req, res) => {
                 { senderId: receiverId, receiverId: senderId },
             ],
         })
-            .sort({ createdAt: -1 }) // latest first
+            .sort({ createdAt: -1 }) // ✅ latest → oldest
             .skip(skip)
             .limit(limit)
 
         res.json({
             page,
             limit,
-            messages: messages.reverse(), // UI ke liye oldest → newest
+            messages   // ✅ reverse BILKUL NAHI
         })
     } catch (error) {
         res.status(500).json({ message: error.message })
