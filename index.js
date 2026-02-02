@@ -349,22 +349,50 @@ io.on('connection', (socket) => {
         console.log('Socket disconnected ❌', socket.id)
     })
 })
+// app.post('/api/messages', async (req, res) => {
+//     try {
+//         const { senderId, receiverId } = req.body
+
+//         const messages = await Message.find({
+//             $or: [
+//                 { senderId, receiverId },
+//                 { senderId: receiverId, receiverId: senderId },
+//             ],
+//         }).sort({ createdAt: 1 })
+
+//         res.json(messages)
+//     } catch (error) {
+//         res.status(500).json({ message: error.message })
+//     }
+// })
+
+
 app.post('/api/messages', async (req, res) => {
     try {
-        const { senderId, receiverId } = req.body
+        const { senderId, receiverId, page = 1, limit = 20 } = req.body
+
+        const skip = (page - 1) * limit
 
         const messages = await Message.find({
             $or: [
-                { senderId, receiverId },
+                { senderId: senderId, receiverId: receiverId },
                 { senderId: receiverId, receiverId: senderId },
             ],
-        }).sort({ createdAt: 1 })
+        })
+            .sort({ createdAt: -1 }) // latest first
+            .skip(skip)
+            .limit(limit)
 
-        res.json(messages)
+        res.json({
+            page,
+            limit,
+            messages: messages.reverse(), // UI ke liye oldest → newest
+        })
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
 })
+
 
 /* =======================
    SERVER START
