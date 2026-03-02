@@ -3,11 +3,12 @@ const express = require('express')
 const cors = require('cors')
 const app = express()
 const admin = require("firebase-admin")
-const serviceAccount = require("./config/firebaseServiceAccount.json")
+require("dotenv").config();
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-})
+});
 // app.use(cors({
 //     origin: "http://localhost:5173",
 //     credentials: true
@@ -544,7 +545,7 @@ app.post('/api/group-messages', async (req, res) => {
    SERVER START
 ======================= */
 
-const PORT = 5000
+const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
     console.log('Server + Socket running on port', PORT)
 })
