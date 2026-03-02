@@ -250,6 +250,60 @@ io.on('connection', (socket) => {
     //     console.log('User joined group:', groupId)
     // })
 
+
+    socket.on("sendVideoCallNotification", async ({ callerId, receiverId }) => {
+        try {
+
+            const caller = await User.findById(callerId)
+            const receiver = await User.findById(receiverId)
+
+            if (!receiver?.fcmToken) return
+
+            await admin.messaging().send({
+                token: receiver.fcmToken,
+                android: {
+                    priority: "high"   // 🔥 IMPORTANT → fast delivery
+                },
+                notification: {
+                    title: "📞 Incoming Video Call",
+                    body: `${caller.name} is calling you`,
+                },
+                data: {
+                    type: "video_call",
+                    callerId: callerId.toString(),
+                }
+            })
+
+            console.log("⚡ Video call notification sent via socket")
+
+        } catch (err) {
+            console.log("❌ Error:", err.message)
+        }
+    })
+
+
+
+    socket.on("acceptVideoCall", async ({ callerId }) => {
+
+        const caller = await User.findById(callerId)
+
+        if (!caller?.fcmToken) return
+
+        await admin.messaging().send({
+            token: caller.fcmToken,
+            android: { priority: "high" },
+            notification: {
+                title: "📞 Call Accepted",
+                body: "Your call was accepted"
+            },
+            data: {
+                type: "call_accepted"
+            }
+        })
+
+    })
+
+
     socket.on('joinGroup', (groupId) => {
 
         const roomId = groupId.toString()
