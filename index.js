@@ -283,25 +283,43 @@ io.on('connection', (socket) => {
 
 
 
+    // socket.on("acceptVideoCall", async ({ callerId }) => {
+
+    //     const caller = await User.findById(callerId)
+
+    //     if (!caller?.fcmToken) return
+
+    //     await admin.messaging().send({
+    //         token: caller.fcmToken,
+    //         android: { priority: "high" },
+    //         notification: {
+    //             title: "📞 Call Accepted",
+    //             body: "Your call was accepted"
+    //         },
+    //         data: {
+    //             type: "call_accepted"
+    //         }
+    //     })
+
+    // })
+
     socket.on("acceptVideoCall", async ({ callerId }) => {
 
-        const caller = await User.findById(callerId)
+        const caller = await User.findById(callerId);
 
-        if (!caller?.fcmToken) return
+        if (!caller?.fcmToken) return;
 
         await admin.messaging().send({
             token: caller.fcmToken,
             android: { priority: "high" },
-            notification: {
+            data: {
+                type: "call_accepted",
                 title: "📞 Call Accepted",
                 body: "Your call was accepted"
-            },
-            data: {
-                type: "call_accepted"
             }
-        })
+        });
 
-    })
+    });
 
 
     socket.on('joinGroup', (groupId) => {
