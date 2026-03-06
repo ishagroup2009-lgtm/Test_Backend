@@ -321,6 +321,34 @@ io.on('connection', (socket) => {
 
     });
 
+    socket.on("rejectVideoCall", async ({ callerId }) => {
+
+        try {
+
+            const caller = await User.findById(callerId);
+
+            if (!caller?.fcmToken) return;
+
+            await admin.messaging().send({
+                token: caller.fcmToken,
+                android: { priority: "high" },
+                data: {
+                    type: "call_rejected",
+                    title: "📞 Call Rejected",
+                    body: "Your call was rejected"
+                }
+            });
+
+            console.log("❌ Call rejected notification sent");
+
+        } catch (error) {
+
+            console.log("❌ Reject call error:", error.message);
+
+        }
+
+    });
+
 
     socket.on("endVideoCall", async ({ callerId, receiverId }) => {
         try {
