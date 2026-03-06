@@ -376,6 +376,47 @@ io.on('connection', (socket) => {
         }
     })
 
+
+    socket.on("userLiveStarted", async ({ userId }) => {
+
+        try {
+
+            const user = await User.findById(userId)
+
+            if (!user) return
+
+            const users = await User.find({
+                _id: { $ne: userId },
+                fcmToken: { $ne: null }
+            })
+
+            for (let u of users) {
+
+                await admin.messaging().send({
+                    token: u.fcmToken,
+                    android: { priority: "high" },
+                    notification: {
+                        title: "🔴 Live Started",
+                        body: `${user.name} is Live now`,
+                    },
+                    data: {
+                        type: "user_live",
+                        userId: userId.toString(),
+                        userName: user.name
+                    }
+                })
+
+            }
+
+            console.log("🔴 Live notification sent to all users")
+
+        } catch (error) {
+            console.log("❌ Live notification error:", error.message)
+        }
+
+    })
+
+
     socket.on("toggleCamera", ({ senderId, receiverId, cameraOn }) => {
 
         io.to(receiverId).emit("cameraStatusChanged", {
