@@ -347,6 +347,16 @@ io.on('connection', (socket) => {
         }
     })
 
+    socket.on("toggleCamera", ({ senderId, receiverId, cameraOn }) => {
+
+        io.to(receiverId).emit("cameraStatusChanged", {
+            userId: senderId,
+            cameraOn: cameraOn
+        })
+
+        console.log("📷 Camera status changed:", senderId, cameraOn)
+    })
+
 
     socket.on('joinGroup', (groupId) => {
 
