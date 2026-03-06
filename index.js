@@ -322,6 +322,32 @@ io.on('connection', (socket) => {
     });
 
 
+    socket.on("endVideoCall", async ({ callerId, receiverId }) => {
+        try {
+
+            const caller = await User.findById(callerId)
+            const receiver = await User.findById(receiverId)
+
+            if (!receiver?.fcmToken) return
+
+            await admin.messaging().send({
+                token: receiver.fcmToken,
+                android: { priority: "high" },
+                data: {
+                    type: "call_ended",
+                    title: "📞 Call Ended",
+                    body: `${caller.name} ended the call`
+                }
+            })
+
+            console.log("📴 Call end notification sent")
+
+        } catch (error) {
+            console.log("❌ End call error:", error.message)
+        }
+    })
+
+
     socket.on('joinGroup', (groupId) => {
 
         const roomId = groupId.toString()
