@@ -315,7 +315,8 @@ io.on('connection', (socket) => {
             data: {
                 type: "call_accepted",
                 title: "📞 Call Accepted",
-                body: "Your call was accepted"
+                body: "Your call was accepted",
+                callerId: callerId.toString(),
             }
         });
 
