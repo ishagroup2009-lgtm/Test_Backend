@@ -6,7 +6,17 @@ const admin = require("firebase-admin")
 require("dotenv").config();
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 const multer = require("multer")
+const fs = require("fs")
 const path = require("path")
+
+const uploadDir = path.join(__dirname, "uploads")
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir)
+}
+
+app.use("/uploads", express.static(uploadDir))
+
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -25,7 +35,7 @@ app.use(cors({
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-app.use("/uploads", express.static("uploads"))
+
 
 const http = require('http')
 const { Server } = require('socket.io')
@@ -40,9 +50,9 @@ const jwt = require('jsonwebtoken')
 
 const storage = multer.diskStorage({
 
-    destination: (req, file, cb) => {
-        cb(null, "uploads/")
-    },
+ destination: (req, file, cb) => {
+    cb(null, uploadDir)
+},
 
     filename: (req, file, cb) => {
 
