@@ -20,14 +20,14 @@ const MessageSchema = new mongoose.Schema(
     },
     message: {
       type: String,
-      required: true,
+      default: ""
     },
-        file: {
-        type: String
+    file: {
+      type: String
     },
 
     fileType: {
-        type: String
+      type: String
     }
   },
   { timestamps: true }
