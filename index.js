@@ -5,6 +5,8 @@ const app = express()
 const admin = require("firebase-admin")
 require("dotenv").config();
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+const multer = require("multer")
+const path = require("path")
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -23,6 +25,7 @@ app.use(cors({
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use("/uploads", express.static("uploads"))
 
 const http = require('http')
 const { Server } = require('socket.io')
@@ -35,7 +38,23 @@ const Group = require('./models/Group')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
+const storage = multer.diskStorage({
 
+    destination: (req, file, cb) => {
+        cb(null, "uploads/")
+    },
+
+    filename: (req, file, cb) => {
+
+        const uniqueName =
+            Date.now() + "-" + file.originalname
+
+        cb(null, uniqueName)
+    }
+
+})
+
+const upload = multer({ storage })
 
 
 /* =======================
@@ -194,6 +213,23 @@ app.post("/api/test-notification", async (req, res) => {
     }
 })
 
+app.post("/api/upload", upload.single("file"), (req, res) => {
+
+    if (!req.file) {
+        return res.status(400).json({
+            message: "No file uploaded"
+        })
+    }
+
+    const fileUrl =
+        `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`
+
+    res.json({
+        fileUrl
+    })
+
+})
+
 /* =======================
    SOCKET.IO SETUP
 ======================= */
@@ -220,29 +256,55 @@ io.on('connection', (socket) => {
     })
 
     // message bhejna
-    socket.on('sendMessage', async ({ senderId, receiverId, message }) => {
-        try {
-            // 🔹 Save message in MongoDB
-            const newMessage = await Message.create({
-                senderId,
-                receiverId,
-                message,
-            })
+    // socket.on('sendMessage', async ({ senderId, receiverId, message }) => {
+    //     try {
+    //         // 🔹 Save message in MongoDB
+    //         const newMessage = await Message.create({
+    //             senderId,
+    //             receiverId,
+    //             message,
+    //         })
 
-            // 🔹 Receiver ko real-time message
-            io.to(receiverId).emit('receiveMessage', {
-                _id: newMessage._id,
-                senderId,
-                receiverId,
-                message,
-                createdAt: newMessage.createdAt,
-            })
+    //         // 🔹 Receiver ko real-time message
+    //         io.to(receiverId).emit('receiveMessage', {
+    //             _id: newMessage._id,
+    //             senderId,
+    //             receiverId,
+    //             message,
+    //             createdAt: newMessage.createdAt,
+    //         })
 
-        } catch (error) {
-            console.log('Message save error ❌', error.message)
-        }
-    })
+    //     } catch (error) {
+    //         console.log('Message save error ❌', error.message)
+    //     }
+    // })
+socket.on('sendMessage', async ({ senderId, receiverId, message, file, fileType }) => {
 
+    try {
+
+        const newMessage = await Message.create({
+            senderId,
+            receiverId,
+            message,
+            file,
+            fileType
+        })
+
+        io.to(receiverId).emit('receiveMessage', {
+            _id: newMessage._id,
+            senderId,
+            receiverId,
+            message,
+            file,
+            fileType,
+            createdAt: newMessage.createdAt,
+        })
+
+    } catch (error) {
+        console.log('Message save error ❌', error.message)
+    }
+
+})
 
     // 🔥 JOIN GROUP ROOM
     // socket.on('joinGroup', (groupId) => {
