@@ -197,9 +197,47 @@ app.post("/api/ai-chat", async (req, res) => {
 // })
 
 
+// app.post("/api/ai-image", async (req, res) => {
+
+//     const { prompt } = req.body
+
+//     try {
+
+//         const response = await axios.post(
+//             "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0",
+//             {
+//                 inputs: prompt,
+//                 options: { wait_for_model: true }
+//             },
+//             {
+//                 headers: {
+//                     Authorization: `Bearer ${process.env.HF_TOKEN}`,
+//                     "Content-Type": "application/json",
+//                     Accept: "image/png"
+//                 },
+//                 responseType: "arraybuffer"
+//             }
+//         )
+
+//         res.set("Content-Type", "image/png")
+//         res.send(response.data)
+
+//     } catch (error) {
+
+//         console.log("Image AI error:", error.response?.data?.toString() || error.message)
+
+//         res.status(500).json({
+//             message: "Image generation failed"
+//         })
+
+//     }
+
+// })
+
+
 app.post("/api/ai-image", async (req, res) => {
 
-    const { prompt } = req.body
+    const { prompt } = req.body;
 
     try {
 
@@ -217,22 +255,32 @@ app.post("/api/ai-image", async (req, res) => {
                 },
                 responseType: "arraybuffer"
             }
-        )
+        );
 
-        res.set("Content-Type", "image/png")
-        res.send(response.data)
+        // 🔥 Convert image to base64
+        const base64Image = Buffer.from(response.data).toString("base64");
+
+        // 🔥 Send JSON response
+        res.json({
+            success: true,
+            image: `data:image/png;base64,${base64Image}`
+        });
 
     } catch (error) {
 
-        console.log("Image AI error:", error.response?.data?.toString() || error.message)
+        console.log(
+            "Image AI error:",
+            error.response?.data?.toString() || error.message
+        );
 
         res.status(500).json({
+            success: false,
             message: "Image generation failed"
-        })
+        });
 
     }
 
-})
+});
 
 
 
