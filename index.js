@@ -156,6 +156,47 @@ app.post("/api/ai-chat", async (req, res) => {
 })
 
 
+// app.post("/api/ai-image", async (req, res) => {
+
+//     const { prompt } = req.body
+
+//     try {
+
+//         const response = await axios.post(
+//             "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0",
+//             {
+//                 inputs: prompt,
+//                 options: { wait_for_model: true }
+//             },
+//             {
+//                 headers: {
+//                     Authorization: `Bearer ${process.env.HF_TOKEN}`,
+//                     "Content-Type": "application/json",
+//                     Accept: "image/png"   // 🔥 IMPORTANT
+//                 },
+//                 responseType: "arraybuffer"
+//             }
+//         )
+
+//         const imageBase64 = Buffer.from(response.data).toString("base64")
+
+//         res.json({
+//             image: `data:image/png;base64,${imageBase64}`
+//         })
+
+//     } catch (error) {
+
+//         console.log("Image AI error:", error.response?.data?.toString() || error.message)
+
+//         res.status(500).json({
+//             message: "Image generation failed"
+//         })
+
+//     }
+
+// })
+
+
 app.post("/api/ai-image", async (req, res) => {
 
     const { prompt } = req.body
@@ -172,17 +213,14 @@ app.post("/api/ai-image", async (req, res) => {
                 headers: {
                     Authorization: `Bearer ${process.env.HF_TOKEN}`,
                     "Content-Type": "application/json",
-                    Accept: "image/png"   // 🔥 IMPORTANT
+                    Accept: "image/png"
                 },
                 responseType: "arraybuffer"
             }
         )
 
-        const imageBase64 = Buffer.from(response.data).toString("base64")
-
-        res.json({
-            image: `data:image/png;base64,${imageBase64}`
-        })
+        res.set("Content-Type", "image/png")
+        res.send(response.data)
 
     } catch (error) {
 
