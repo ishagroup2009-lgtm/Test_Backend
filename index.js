@@ -8,6 +8,7 @@ const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 const multer = require("multer")
 const fs = require("fs")
 const path = require("path")
+const axios = require("axios")
 
 const uploadDir = path.join(__dirname, "uploads")
 
@@ -129,7 +130,7 @@ app.post("/api/ai-chat", async (req, res) => {
             },
             {
                 headers: {
-                    Authorization: `Bearer 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`,
+                    Authorization: `Bearer ${process.env.Groq_API_kEY}`,
                     "Content-Type": "application/json"
                 }
             }
@@ -162,7 +163,7 @@ app.post("/api/ai-image", async (req, res) => {
             { inputs: prompt },
             {
                 headers: {
-                    Authorization: "Bearer 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"
+                    Authorization: `Bearer ${process.env.Groq_API_kEY}`,
                 },
                 responseType: "arraybuffer"
             }
