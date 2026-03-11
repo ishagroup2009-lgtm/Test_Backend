@@ -12,7 +12,7 @@ const path = require("path")
 const uploadDir = path.join(__dirname, "uploads")
 
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir)
+    fs.mkdirSync(uploadDir)
 }
 
 app.use("/uploads", express.static(uploadDir))
@@ -50,9 +50,9 @@ const jwt = require('jsonwebtoken')
 
 const storage = multer.diskStorage({
 
- destination: (req, file, cb) => {
-    cb(null, uploadDir)
-},
+    destination: (req, file, cb) => {
+        cb(null, uploadDir)
+    },
 
     filename: (req, file, cb) => {
 
@@ -110,6 +110,82 @@ app.get("/.well-known/assetlinks.json", (req, res) => {
 app.get('/', (req, res) => {
     res.send('Backend + Socket running 🚀')
 })
+
+
+
+app.post("/api/ai-chat", async (req, res) => {
+
+    const { message } = req.body
+
+    try {
+
+        const response = await axios.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            {
+                model: "llama3-8b-8192",
+                messages: [
+                    { role: "user", content: message }
+                ]
+            },
+            {
+                headers: {
+                    Authorization: `Bearer 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`,
+                    "Content-Type": "application/json"
+                }
+            }
+        )
+
+        res.json({
+            reply: response.data.choices[0].message.content
+        })
+
+    } catch (error) {
+
+        console.log("AI Error:", error.message)
+
+        res.status(500).json({
+            message: "AI error"
+        })
+    }
+
+})
+
+
+app.post("/api/ai-image", async (req, res) => {
+
+    const { prompt } = req.body
+
+    try {
+
+        const response = await axios.post(
+            "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2",
+            { inputs: prompt },
+            {
+                headers: {
+                    Authorization: "Bearer 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"
+                },
+                responseType: "arraybuffer"
+            }
+        )
+
+        const base64 = Buffer.from(response.data).toString("base64")
+
+        res.json({
+            image: base64
+        })
+
+    } catch (error) {
+
+        console.log("Image AI error:", error.message)
+
+        res.status(500).json({
+            message: "Image generation error"
+        })
+    }
+
+})
+
+
 
 app.post('/api/register', async (req, res) => {
     try {
@@ -288,33 +364,33 @@ io.on('connection', (socket) => {
     //         console.log('Message save error ❌', error.message)
     //     }
     // })
-socket.on('sendMessage', async ({ senderId, receiverId, message, file, fileType }) => {
+    socket.on('sendMessage', async ({ senderId, receiverId, message, file, fileType }) => {
 
-    try {
+        try {
 
-        const newMessage = await Message.create({
-            senderId,
-            receiverId,
-            message,
-            file,
-            fileType
-        })
+            const newMessage = await Message.create({
+                senderId,
+                receiverId,
+                message,
+                file,
+                fileType
+            })
 
-        io.to(receiverId).emit('receiveMessage', {
-            _id: newMessage._id,
-            senderId,
-            receiverId,
-            message,
-            file,
-            fileType,
-            createdAt: newMessage.createdAt,
-        })
+            io.to(receiverId).emit('receiveMessage', {
+                _id: newMessage._id,
+                senderId,
+                receiverId,
+                message,
+                file,
+                fileType,
+                createdAt: newMessage.createdAt,
+            })
 
-    } catch (error) {
-        console.log('Message save error ❌', error.message)
-    }
+        } catch (error) {
+            console.log('Message save error ❌', error.message)
+        }
 
-})
+    })
 
     // 🔥 JOIN GROUP ROOM
     // socket.on('joinGroup', (groupId) => {
