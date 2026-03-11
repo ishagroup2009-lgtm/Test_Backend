@@ -171,7 +171,8 @@ app.post("/api/ai-image", async (req, res) => {
             {
                 headers: {
                     Authorization: `Bearer ${process.env.HF_TOKEN}`,
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    Accept: "image/png"   // 🔥 IMPORTANT
                 },
                 responseType: "arraybuffer"
             }
