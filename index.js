@@ -163,29 +163,33 @@ app.post("/api/ai-image", async (req, res) => {
     try {
 
         const response = await axios.post(
-            "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2",
-            { inputs: prompt },
+            "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
+            {
+                inputs: prompt
+            },
             {
                 headers: {
-                    Authorization: `Bearer ${process.env.Groq_API_kEY}`,
+                    Authorization: `Bearer ${process.env.HF_TOKEN}`,
+                    "Content-Type": "application/json"
                 },
                 responseType: "arraybuffer"
             }
         )
 
-        const base64 = Buffer.from(response.data).toString("base64")
+        const imageBase64 = Buffer.from(response.data).toString("base64")
 
         res.json({
-            image: base64
+            image: `data:image/png;base64,${imageBase64}`
         })
 
     } catch (error) {
 
-        console.log("Image AI error:", error.message)
+        console.log("Image AI error:", error.response?.data || error.message)
 
         res.status(500).json({
-            message: "Image generation error"
+            message: "Image generation failed"
         })
+
     }
 
 })
