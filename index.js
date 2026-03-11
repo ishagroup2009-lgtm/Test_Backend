@@ -123,9 +123,12 @@ app.post("/api/ai-chat", async (req, res) => {
         const response = await axios.post(
             "https://api.groq.com/openai/v1/chat/completions",
             {
-                model: "llama3-8b-8192",
+                model: "openai/gpt-oss-120b",
                 messages: [
-                    { role: "user", content: message }
+                    {
+                        role: "user",
+                        content: message
+                    }
                 ]
             },
             {
@@ -142,11 +145,12 @@ app.post("/api/ai-chat", async (req, res) => {
 
     } catch (error) {
 
-        console.log("AI Error:", error.message)
+        console.log("AI Error:", error.response?.data || error.message)
 
         res.status(500).json({
             message: "AI error"
         })
+
     }
 
 })
