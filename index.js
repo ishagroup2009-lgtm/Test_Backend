@@ -165,7 +165,10 @@ app.post("/api/ai-image", async (req, res) => {
         const response = await axios.post(
             "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
             {
-                inputs: prompt
+                inputs: prompt,
+                options: {
+                    wait_for_model: true
+                }
             },
             {
                 headers: {
@@ -184,7 +187,7 @@ app.post("/api/ai-image", async (req, res) => {
 
     } catch (error) {
 
-        console.log("Image AI error:", error.response?.data || error.message)
+        console.log("Image AI error:", error.response?.data?.toString() || error.message)
 
         res.status(500).json({
             message: "Image generation failed"
