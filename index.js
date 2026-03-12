@@ -467,11 +467,63 @@ io.on('connection', (socket) => {
     //     }
 
     // })
+    // socket.on('sendMessage', async ({ senderId, receiverId, message, file, fileType }) => {
+
+    //     try {
+
+    //         // message save
+    //         const newMessage = await Message.create({
+    //             senderId,
+    //             receiverId,
+    //             message,
+    //             file,
+    //             fileType
+    //         })
+
+    //         // realtime socket message
+    //         io.to(receiverId).emit('receiveMessage', {
+    //             _id: newMessage._id,
+    //             senderId,
+    //             receiverId,
+    //             message,
+    //             file,
+    //             fileType,
+    //             createdAt: newMessage.createdAt,
+    //         })
+
+    //         // 🔥 GET SENDER & RECEIVER
+    //         const sender = await User.findById(senderId)
+    //         const receiver = await User.findById(receiverId)
+
+    //         if (!receiver?.fcmToken) return
+
+    //         // 🔥 SEND PUSH NOTIFICATION
+    //         await admin.messaging().send({
+    //             token: receiver.fcmToken,
+    //             android: {
+    //                 priority: "high"
+    //             },
+    //             notification: {
+    //                 title: sender.name,      // sender name
+    //                 body: message || "Sent you a file"
+    //             },
+    //             data: {
+    //                 type: "chat_message",
+    //                 senderId: senderId.toString(),
+    //             }
+    //         })
+
+    //         console.log("📩 Message notification sent")
+
+    //     } catch (error) {
+    //         console.log('Message save error ❌', error.message)
+    //     }
+
+    // })
     socket.on('sendMessage', async ({ senderId, receiverId, message, file, fileType }) => {
 
         try {
 
-            // message save
             const newMessage = await Message.create({
                 senderId,
                 receiverId,
@@ -480,7 +532,6 @@ io.on('connection', (socket) => {
                 fileType
             })
 
-            // realtime socket message
             io.to(receiverId).emit('receiveMessage', {
                 _id: newMessage._id,
                 senderId,
@@ -491,26 +542,26 @@ io.on('connection', (socket) => {
                 createdAt: newMessage.createdAt,
             })
 
-            // 🔥 GET SENDER & RECEIVER
             const sender = await User.findById(senderId)
             const receiver = await User.findById(receiverId)
 
             if (!receiver?.fcmToken) return
 
-            // 🔥 SEND PUSH NOTIFICATION
             await admin.messaging().send({
                 token: receiver.fcmToken,
                 android: {
                     priority: "high"
                 },
-                notification: {
-                    title: sender.name,      // sender name
-                    body: message || "Sent you a file"
-                },
+
+                // ❌ notification remove
+
                 data: {
                     type: "chat_message",
                     senderId: senderId.toString(),
+                    title: sender.name,
+                    body: message || "Sent you a file"
                 }
+
             })
 
             console.log("📩 Message notification sent")
