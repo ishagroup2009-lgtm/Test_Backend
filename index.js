@@ -552,16 +552,12 @@ io.on('connection', (socket) => {
                 android: {
                     priority: "high"
                 },
-
-                // ❌ notification remove
-
                 data: {
                     type: "chat_message",
                     senderId: senderId.toString(),
-                    title: sender.name,
+                    title: sender.name, // notification me name
                     body: message || "Sent you a file"
                 }
-
             })
 
             console.log("📩 Message notification sent")
