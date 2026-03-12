@@ -284,32 +284,73 @@ app.post("/api/ai-image", async (req, res) => {
 
 
 
-app.post('/api/register', async (req, res) => {
+// app.post('/api/register', async (req, res) => {
+//     try {
+//         const { name, email, password } = req.body
+
+//         if (!name || !email || !password) {
+//             return res.status(400).json({ message: 'All fields required' })
+//         }
+
+//         const userExists = await User.findOne({ email })
+//         if (userExists) {
+//             return res.status(400).json({ message: 'User already exists' })
+//         }
+
+//         const hashedPassword = await bcrypt.hash(password, 10)
+
+//         await User.create({
+//             name,
+//             email,
+//             password: hashedPassword,
+//         })
+
+//         res.json({ message: 'User registered successfully ✅' })
+//     } catch (error) {
+//         res.status(500).json({ message: error.message })
+//     }
+// })
+
+app.post('/api/register', upload.single("photo"), async (req, res) => {
     try {
-        const { name, email, password } = req.body
+
+        const { name, email, password, phone, bio } = req.body
 
         if (!name || !email || !password) {
             return res.status(400).json({ message: 'All fields required' })
         }
 
         const userExists = await User.findOne({ email })
+
         if (userExists) {
             return res.status(400).json({ message: 'User already exists' })
         }
 
         const hashedPassword = await bcrypt.hash(password, 10)
 
-        await User.create({
+        const photo = req.file
+            ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`
+            : null
+
+        const user = await User.create({
             name,
             email,
             password: hashedPassword,
+            phone,
+            bio,
+            photo
         })
 
-        res.json({ message: 'User registered successfully ✅' })
+        res.json({
+            message: 'User registered successfully ✅',
+            user
+        })
+
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
 })
+
 
 app.post('/api/login', async (req, res) => {
     try {
