@@ -554,9 +554,9 @@ io.on('connection', (socket) => {
                 },
                 data: {
                     type: "chat_message",
-                    senderId: senderId.toString(),
-                    title: sender.name, // notification me name
-                    body: message || "Sent you a file"
+                    senderId: String(senderId),
+                    title: String(sender.name),
+                    body: String(message || "Sent you a file")
                 }
             })
 
