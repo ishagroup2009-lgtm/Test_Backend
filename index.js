@@ -352,15 +352,44 @@ app.post('/api/register', upload.single("photo"), async (req, res) => {
 })
 
 
+// app.post('/api/login', async (req, res) => {
+//     try {
+//         const { email, password } = req.body
+
+//         const user = await User.findOne({ email })
+//         if (!user) return res.status(400).json({ message: 'Invalid credentials' })
+
+//         const isMatch = await bcrypt.compare(password, user.password)
+//         if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' })
+
+//         const token = jwt.sign({ userId: user._id }, 'SECRET_KEY_123')
+
+//         res.json({
+//             message: 'Login successful ✅',
+//             token,
+//             userId: user._id,
+//         })
+//     } catch (error) {
+//         res.status(500).json({ message: error.message })
+//     }
+// })
+
 app.post('/api/login', async (req, res) => {
     try {
+
         const { email, password } = req.body
 
         const user = await User.findOne({ email })
-        if (!user) return res.status(400).json({ message: 'Invalid credentials' })
+
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid credentials' })
+        }
 
         const isMatch = await bcrypt.compare(password, user.password)
-        if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' })
+
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Invalid credentials' })
+        }
 
         const token = jwt.sign({ userId: user._id }, 'SECRET_KEY_123')
 
@@ -368,7 +397,14 @@ app.post('/api/login', async (req, res) => {
             message: 'Login successful ✅',
             token,
             userId: user._id,
+
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            bio: user.bio,
+            photo: user.photo
         })
+
     } catch (error) {
         res.status(500).json({ message: error.message })
     }
