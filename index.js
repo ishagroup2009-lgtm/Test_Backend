@@ -410,18 +410,42 @@ app.post('/api/login', async (req, res) => {
     }
 })
 
+// app.post('/api/all-users', async (req, res) => {
+//     const { userId } = req.body
+
+//     const users = await User.find(
+//         { _id: { $ne: userId } },
+//         { password: 0 }
+//     )
+
+//     res.json({
+//         total: users.length,
+//         users,
+//     })
+// })
 app.post('/api/all-users', async (req, res) => {
-    const { userId } = req.body
+    try {
 
-    const users = await User.find(
-        { _id: { $ne: userId } },
-        { password: 0 }
-    )
+        const { userId } = req.body
 
-    res.json({
-        total: users.length,
-        users,
-    })
+        const users = await User.find(
+            { _id: { $ne: userId } }, // current user ko remove karega
+            { password: 0 } // password hide
+        )
+
+        res.json({
+            success: true,
+            total: users.length,
+            users
+        })
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            success: false,
+            message: "Server Error"
+        })
+    }
 })
 
 app.post("/api/save-token", async (req, res) => {
