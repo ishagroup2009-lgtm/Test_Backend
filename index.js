@@ -48,6 +48,7 @@ const Message = require('./models/Message')
 const Group = require('./models/Group')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const Status = require("./models/Status")
 
 const storage = multer.diskStorage({
 
@@ -281,6 +282,147 @@ app.post("/api/ai-image", async (req, res) => {
     }
 
 });
+
+
+app.post("/api/upload-status", upload.single("image"), async (req, res) => {
+
+    try {
+
+        const { userId, text } = req.body
+
+        const image = req.file
+            ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`
+            : null
+
+        const status = await Status.create({
+            userId,
+            text,
+            image
+        })
+
+        res.json({
+            success: true,
+            status
+        })
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        })
+
+    }
+
+})
+
+app.get("/api/status", async (req, res) => {
+
+    try {
+
+        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+
+        const statuses = await Status.find({
+            createdAt: { $gte: yesterday }
+        })
+        .populate("userId", "name photo")
+        .sort({ createdAt: -1 })
+
+        res.json({
+            success: true,
+            statuses
+        })
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        })
+
+    }
+
+})
+
+app.delete("/api/delete-status/:id", async (req, res) => {
+
+    try {
+
+        await Status.findByIdAndDelete(req.params.id)
+
+        res.json({
+            success: true,
+            message: "Status deleted"
+        })
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        })
+
+    }
+
+})
+
+app.post("/api/view-status", async (req, res) => {
+
+    try {
+
+        const { statusId, userId } = req.body
+
+        const status = await Status.findById(statusId)
+
+        const alreadyViewed = status.views.find(
+            v => v.user.toString() === userId
+        )
+
+        if (!alreadyViewed) {
+
+            status.views.push({
+                user: userId
+            })
+
+            await status.save()
+        }
+
+        res.json({
+            success: true
+        })
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        })
+
+    }
+
+})
+
+app.get("/api/status-views/:statusId", async (req, res) => {
+
+    try {
+
+        const status = await Status.findById(req.params.statusId)
+            .populate("views.user", "name photo")
+
+        res.json({
+            totalViews: status.views.length,
+            views: status.views
+        })
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: error.message
+        })
+
+    }
+
+})
 
 
 
