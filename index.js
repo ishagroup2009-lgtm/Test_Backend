@@ -316,17 +316,20 @@ app.post("/api/upload-status", upload.single("image"), async (req, res) => {
 
 })
 
-app.get("/api/status", async (req, res) => {
+app.post("/api/other-status", async (req, res) => {
 
     try {
+
+        const { userId } = req.body
 
         const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
 
         const statuses = await Status.find({
+            userId: { $ne: userId },
             createdAt: { $gte: yesterday }
         })
-        .populate("userId", "name photo")
-        .sort({ createdAt: -1 })
+            .populate("userId", "name photo")
+            .sort({ createdAt: -1 })
 
         res.json({
             success: true,
@@ -336,13 +339,41 @@ app.get("/api/status", async (req, res) => {
     } catch (error) {
 
         res.status(500).json({
-            success: false,
             message: error.message
         })
 
     }
 
 })
+
+app.post("/api/my-status", async (req, res) => {
+
+    try {
+
+        const { userId } = req.body
+
+        const statuses = await Status.find({
+            userId: userId
+        }).sort({ createdAt: -1 })
+
+        res.json({
+            success: true,
+            statuses
+        })
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: error.message
+        })
+
+    }
+
+})
+
+
+
+
 
 app.delete("/api/delete-status/:id", async (req, res) => {
 
