@@ -987,8 +987,10 @@ io.on('connection', (socket) => {
                 _id: { $ne: userId },
                 fcmToken: { $ne: null }
             })
+  const numericUid = parseInt(userId.slice(-6), 16);
 
             for (let u of users) {
+              
 
                 await admin.messaging().send({
                     token: u.fcmToken,
@@ -1000,7 +1002,8 @@ io.on('connection', (socket) => {
                     data: {
                         type: "user_live",
                         userId: userId.toString(),
-                        userName: user.name
+                        userName: user.name,
+                        hostUid: numericUid.toString(),
                     }
                 })
 
