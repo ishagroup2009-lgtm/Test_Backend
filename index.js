@@ -18,6 +18,7 @@ if (!fs.existsSync(uploadDir)) {
 
 app.use("/uploads", express.static(uploadDir))
 
+let liveUsers = new Map();
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -975,23 +976,76 @@ io.on('connection', (socket) => {
     })
 
 
+    // socket.on("userLiveStarted", async ({ userId }) => {
+
+    //     try {
+
+    //         const user = await User.findById(userId)
+
+    //         if (!user) return
+
+    //         const users = await User.find({
+    //             _id: { $ne: userId },
+    //             fcmToken: { $ne: null }
+    //         })
+    //         const numericUid = parseInt(userId.slice(-6), 16);
+
+    //         for (let u of users) {
+
+
+    //             await admin.messaging().send({
+    //                 token: u.fcmToken,
+    //                 android: { priority: "high" },
+    //                 notification: {
+    //                     title: "🔴 Live Started",
+    //                     body: `${user.name} is Live now`,
+    //                 },
+    //                 data: {
+    //                     type: "user_live",
+    //                     userId: userId.toString(),
+    //                     userName: user.name,
+    //                     hostUid: numericUid.toString(),
+    //                 }
+    //             })
+
+    //         }
+
+    //         console.log("🔴 Live notification sent to all users")
+
+    //     } catch (error) {
+    //         console.log("❌ Live notification error:", error.message)
+    //     }
+
+    // })
+
     socket.on("userLiveStarted", async ({ userId }) => {
 
         try {
 
-            const user = await User.findById(userId)
+            const user = await User.findById(userId);
 
-            if (!user) return
+            if (!user) return;
 
+            // 🔥 STORE LIVE USER
+            liveUsers.set(userId, {
+                userId,
+                name: user.name,
+                photo: user.photo,
+                socketId: socket.id
+            });
+
+            // 🔥 BROADCAST TO ALL USERS
+            io.emit("liveUsersUpdate", Array.from(liveUsers.values()));
+
+            // ✅ existing notification code (same)
             const users = await User.find({
                 _id: { $ne: userId },
                 fcmToken: { $ne: null }
-            })
-  const numericUid = parseInt(userId.slice(-6), 16);
+            });
+
+            const numericUid = parseInt(userId.slice(-6), 16);
 
             for (let u of users) {
-              
-
                 await admin.messaging().send({
                     token: u.fcmToken,
                     android: { priority: "high" },
@@ -1002,20 +1056,28 @@ io.on('connection', (socket) => {
                     data: {
                         type: "user_live",
                         userId: userId.toString(),
-                        userName: user.name,
                         hostUid: numericUid.toString(),
                     }
-                })
-
+                });
             }
 
-            console.log("🔴 Live notification sent to all users")
+            console.log("🔴 Live + Broadcast done");
 
         } catch (error) {
-            console.log("❌ Live notification error:", error.message)
+            console.log("❌ Live error:", error.message);
         }
+    });
 
-    })
+    socket.on("userLiveEnded", ({ userId }) => {
+
+        // 🔥 REMOVE USER
+        liveUsers.delete(userId);
+
+        // 🔥 UPDATE ALL CLIENTS
+        io.emit("liveUsersUpdate", Array.from(liveUsers.values()));
+
+        console.log("🔴 Live ended broadcast");
+    });
 
 
     socket.on("toggleCamera", ({ senderId, receiverId, cameraOn }) => {
@@ -1095,9 +1157,22 @@ io.on('connection', (socket) => {
 
 
 
-    socket.on('disconnect', () => {
-        console.log('Socket disconnected ❌', socket.id)
-    })
+    // socket.on('disconnect', () => {
+    //     console.log('Socket disconnected ❌', socket.id)
+    // })
+    socket.on("disconnect", () => {
+
+        for (let [userId, data] of liveUsers) {
+
+            if (socket.id === data.socketId) {
+                liveUsers.delete(userId);
+            }
+        }
+
+        io.emit("liveUsersUpdate", Array.from(liveUsers.values()));
+
+        console.log("User disconnected → live removed");
+    });
 })
 // app.post('/api/messages', async (req, res) => {
 //     try {
