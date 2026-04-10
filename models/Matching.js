@@ -10,6 +10,7 @@ const matchingSchema = new mongoose.Schema({
     place: String,
     lat: Number,
     lon: Number,
+    timezone: Number   // ✅ ADD THIS
   },
 
   female: {
@@ -19,10 +20,11 @@ const matchingSchema = new mongoose.Schema({
     place: String,
     lat: Number,
     lon: Number,
+    timezone: Number   // ✅ ADD THIS
   },
 
-  payload: Object,        // astrology payload
-  result: Object,         // API result (obstruction etc)
+  payload: Object,
+  result: Object,
 
 }, { timestamps: true });
 
