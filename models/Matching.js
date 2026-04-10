@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const matchingSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 
@@ -8,7 +10,7 @@ const matchingSchema = new mongoose.Schema({
     place: String,
     lat: Number,
     lon: Number,
-    timezone: Number   // ✅ added
+    timezone: Number
   },
 
   female: {
@@ -18,7 +20,9 @@ const matchingSchema = new mongoose.Schema({
     place: String,
     lat: Number,
     lon: Number,
-    timezone: Number   // ✅ added
+    timezone: Number
   },
 
 }, { timestamps: true });
+
+module.exports = mongoose.model("Matching", matchingSchema);
