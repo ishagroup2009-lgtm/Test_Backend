@@ -50,6 +50,7 @@ const Group = require('./models/Group')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const Status = require("./models/Status")
+const Matching = require("./models/Matching");
 
 const storage = multer.diskStorage({
 
@@ -235,6 +236,53 @@ app.post("/api/ai-chat", async (req, res) => {
 //     }
 
 // })
+
+app.post("/api/save-matching", async (req, res) => {
+    try {
+        const { userId, male, female, payload, result } = req.body;
+
+        const matching = await Matching.create({
+            userId,
+            male,
+            female,
+            payload,
+            result,
+        });
+
+        res.json({
+            success: true,
+            message: "Matching saved successfully 🔮",
+            matching,
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+});
+
+app.post("/api/get-matchings", async (req, res) => {
+    try {
+        const { userId } = req.body;
+
+        const matchings = await Matching.find({ userId })
+            .sort({ createdAt: -1 });
+
+        res.json({
+            success: true,
+            total: matchings.length,
+            matchings,
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+});
 
 
 app.post("/api/ai-image", async (req, res) => {
