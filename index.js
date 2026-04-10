@@ -238,29 +238,53 @@ app.post("/api/ai-chat", async (req, res) => {
 // })
 
 app.post("/api/save-matching", async (req, res) => {
-    try {
-        const { userId, male, female, payload, result } = req.body;
+  try {
+    const { userId, male, female } = req.body;
 
-        const matching = await Matching.create({
-            userId,
-            male,
-            female,
-            payload,
-            result,
-        });
-
-        res.json({
-            success: true,
-            message: "Matching saved successfully 🔮",
-            matching,
-        });
-
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+    if (!userId || !male || !female) {
+      return res.status(400).json({
+        success: false,
+        message: "userId, male, female required",
+      });
     }
+
+    const matching = await Matching.create({
+      userId,
+
+      male: {
+        name: male.name,
+        dob: male.dob,
+        time: male.time,
+        place: male.place,
+        lat: male.lat,
+        lon: male.lon,
+        timezone: male.timezone || 5.5
+      },
+
+      female: {
+        name: female.name,
+        dob: female.dob,
+        time: female.time,
+        place: female.place,
+        lat: female.lat,
+        lon: female.lon,
+        timezone: female.timezone || 5.5
+      }
+
+    });
+
+    res.json({
+      success: true,
+      message: "Matching saved successfully 🔮",
+      matching,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 });
 
 app.post("/api/get-matchings", async (req, res) => {
