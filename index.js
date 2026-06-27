@@ -51,6 +51,8 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const Status = require("./models/Status")
 const Matching = require("./models/Matching");
+const Category = require("./models/Category");
+const SubCategory = require("./models/SubCategory");
 
 const storage = multer.diskStorage({
 
@@ -528,6 +530,150 @@ app.get("/api/status-views/:statusId", async (req, res) => {
 
 })
 
+
+// *************Shopping Api**********************
+
+
+app.post("/api/add-category", upload.single("image"), async (req, res) => {
+
+    try {
+
+        const { name } = req.body;
+
+        if (!name) {
+            return res.status(400).json({
+                status: false,
+                message: "Category name required"
+            });
+        }
+
+        const image = req.file
+            ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`
+            : "";
+
+        const category = await Category.create({
+            name,
+            image
+        });
+
+        res.json({
+            status: true,
+            message: "Category Added Successfully",
+            data: category
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            status: false,
+            message: error.message
+        });
+
+    }
+
+});
+
+app.get("/api/categories", async (req, res) => {
+
+    try {
+
+        const categories = await Category.find({
+            status: true
+        }).sort({ createdAt: -1 });
+
+        res.json({
+            status: true,
+            total: categories.length,
+            data: categories
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            status: false,
+            message: error.message
+        });
+
+    }
+
+});
+
+app.post("/api/add-subcategory", upload.single("image"), async (req, res) => {
+
+    try {
+
+        const { categoryId, name } = req.body;
+
+        if (!categoryId || !name) {
+
+            return res.status(400).json({
+                status: false,
+                message: "CategoryId and Name Required"
+            });
+
+        }
+
+        const image = req.file
+            ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`
+            : "";
+
+        const subCategory = await SubCategory.create({
+
+            categoryId,
+            name,
+            image
+
+        });
+
+        res.json({
+
+            status: true,
+            message: "SubCategory Added",
+            data: subCategory
+
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            status: false,
+            message: error.message
+        });
+
+    }
+
+});
+app.get("/api/subcategories/:categoryId", async (req, res) => {
+
+    try {
+
+        const subCategories = await SubCategory.find({
+
+            categoryId: req.params.categoryId,
+            status: true
+
+        }).sort({ createdAt: -1 });
+
+        res.json({
+
+            status: true,
+            total: subCategories.length,
+            data: subCategories
+
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+
+            status: false,
+            message: error.message
+
+        });
+
+    }
+
+});
 
 
 // app.post('/api/register', async (req, res) => {
