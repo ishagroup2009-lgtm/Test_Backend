@@ -238,53 +238,53 @@ app.post("/api/ai-chat", async (req, res) => {
 // })
 
 app.post("/api/save-matching", async (req, res) => {
-  try {
-    const { userId, male, female } = req.body;
+    try {
+        const { userId, male, female } = req.body;
 
-    if (!userId || !male || !female) {
-      return res.status(400).json({
-        success: false,
-        message: "userId, male, female required",
-      });
+        if (!userId || !male || !female) {
+            return res.status(400).json({
+                success: false,
+                message: "userId, male, female required",
+            });
+        }
+
+        const matching = await Matching.create({
+            userId,
+
+            male: {
+                name: male.name,
+                dob: male.dob,
+                time: male.time,
+                place: male.place,
+                lat: male.lat,
+                lon: male.lon,
+                timezone: male.timezone || 5.5
+            },
+
+            female: {
+                name: female.name,
+                dob: female.dob,
+                time: female.time,
+                place: female.place,
+                lat: female.lat,
+                lon: female.lon,
+                timezone: female.timezone || 5.5
+            }
+
+        });
+
+        res.json({
+            success: true,
+            message: "Matching saved successfully 🔮",
+            matching,
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
     }
-
-    const matching = await Matching.create({
-      userId,
-
-      male: {
-        name: male.name,
-        dob: male.dob,
-        time: male.time,
-        place: male.place,
-        lat: male.lat,
-        lon: male.lon,
-        timezone: male.timezone || 5.5
-      },
-
-      female: {
-        name: female.name,
-        dob: female.dob,
-        time: female.time,
-        place: female.place,
-        lat: female.lat,
-        lon: female.lon,
-        timezone: female.timezone || 5.5
-      }
-
-    });
-
-    res.json({
-      success: true,
-      message: "Matching saved successfully 🔮",
-      matching,
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
 });
 
 app.post("/api/get-matchings", async (req, res) => {
@@ -1264,31 +1264,76 @@ io.on('connection', (socket) => {
 // })
 
 
+// app.post('/api/messages', async (req, res) => {
+//     try {
+//         const { senderId, receiverId, page = 1, limit = 20 } = req.body
+
+//         const skip = (page - 1) * limit
+
+//         const messages = await Message.find({
+//             $or: [
+//                 { senderId: senderId, receiverId: receiverId },
+//                 { senderId: receiverId, receiverId: senderId },
+//             ],
+//         })
+//             .sort({ createdAt: -1 }) // ✅ latest → oldest
+//             .skip(skip)
+//             .limit(limit)
+
+//         res.json({
+//             page,
+//             limit,
+//             messages   // ✅ reverse BILKUL NAHI
+//         })
+//     } catch (error) {
+//         res.status(500).json({ message: error.message })
+//     }
+// })
+
 app.post('/api/messages', async (req, res) => {
     try {
-        const { senderId, receiverId, page = 1, limit = 20 } = req.body
+        const {
+            senderId,
+            receiverId,
+            page = 1,
+            limit = 20
+        } = req.body;
 
-        const skip = (page - 1) * limit
+        const pageNumber = parseInt(page);
+        const limitNumber = parseInt(limit);
 
-        const messages = await Message.find({
+        const skip = (pageNumber - 1) * limitNumber;
+
+        const filter = {
             $or: [
-                { senderId: senderId, receiverId: receiverId },
-                { senderId: receiverId, receiverId: senderId },
-            ],
-        })
-            .sort({ createdAt: -1 }) // ✅ latest → oldest
+                { senderId, receiverId },
+                { senderId: receiverId, receiverId: senderId }
+            ]
+        };
+
+        const messages = await Message.find(filter)
+            .sort({ createdAt: -1 }) // Latest first
             .skip(skip)
-            .limit(limit)
+            .limit(limitNumber);
+
+        const totalMessages = await Message.countDocuments(filter);
 
         res.json({
-            page,
-            limit,
-            messages   // ✅ reverse BILKUL NAHI
-        })
+            status: true,
+            page: pageNumber,
+            limit: limitNumber,
+            totalMessages,
+            hasMore: skip + messages.length < totalMessages,
+            data: messages
+        });
+
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        res.status(500).json({
+            status: false,
+            message: error.message
+        });
     }
-})
+});
 
 
 // Group Api s
