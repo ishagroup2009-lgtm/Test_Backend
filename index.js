@@ -44,7 +44,7 @@ const { Server } = require('socket.io')
 
 require('./db')
 const User = require('./models/User')
-const Product = require('./models/Product')
+
 const Message = require('./models/Message')
 const Group = require('./models/Group')
 const bcrypt = require('bcryptjs')
