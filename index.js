@@ -53,6 +53,8 @@ const Status = require("./models/Status")
 const Matching = require("./models/Matching");
 const Category = require("./models/Category");
 const SubCategory = require("./models/SubCategory");
+const Product = require("./models/Product");
+const Cart = require("./models/Cart");
 
 const storage = multer.diskStorage({
 
@@ -659,6 +661,239 @@ app.get("/api/subcategories/:categoryId", async (req, res) => {
             status: true,
             total: subCategories.length,
             data: subCategories
+
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+
+            status: false,
+            message: error.message
+
+        });
+
+    }
+
+});
+
+app.post("/api/add-product", upload.array("images", 5), async (req, res) => {
+
+    try {
+
+        const {
+            categoryId,
+            subCategoryId,
+            name,
+            description,
+            price,
+            salePrice,
+            stock
+        } = req.body;
+
+        const images = req.files
+            ? req.files.map(file =>
+                `${req.protocol}://${req.get("host")}/uploads/${file.filename}`)
+            : [];
+
+        const product = await Product.create({
+
+            categoryId,
+            subCategoryId,
+            name,
+            description,
+            price,
+            salePrice,
+            stock,
+            images
+
+        });
+
+        res.json({
+
+            status: true,
+            message: "Product Added Successfully",
+            data: product
+
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            status: false,
+            message: error.message
+        });
+
+    }
+
+});
+
+app.get("/api/products/:subCategoryId", async (req, res) => {
+
+    try {
+
+        const products = await Product.find({
+
+            subCategoryId: req.params.subCategoryId,
+            status: true
+
+        })
+            .populate("categoryId", "name")
+            .populate("subCategoryId", "name")
+            .sort({ createdAt: -1 });
+
+        res.json({
+
+            status: true,
+            total: products.length,
+            data: products
+
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+
+            status: false,
+            message: error.message
+
+        });
+
+    }
+
+});
+
+app.get("/api/product/:id", async (req, res) => {
+
+    try {
+
+        const product = await Product.findById(req.params.id)
+            .populate("categoryId", "name")
+            .populate("subCategoryId", "name");
+
+        res.json({
+
+            status: true,
+            data: product
+
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+
+            status: false,
+            message: error.message
+
+        });
+
+    }
+
+});
+
+app.post("/api/add-to-cart", async (req, res) => {
+
+    try {
+
+        const {
+            userId,
+            productId,
+            qty = 1
+        } = req.body;
+
+        const exist = await Cart.findOne({
+
+            userId,
+            productId
+
+        });
+
+        if (exist) {
+
+            exist.qty += Number(qty);
+
+            await exist.save();
+
+            return res.json({
+
+                status: true,
+                message: "Cart Updated",
+                data: exist
+
+            });
+
+        }
+
+        const cart = await Cart.create({
+
+            userId,
+            productId,
+            qty
+
+        });
+
+        res.json({
+
+            status: true,
+            message: "Added To Cart",
+            data: cart
+
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+
+            status: false,
+            message: error.message
+
+        });
+
+    }
+
+});
+app.get("/api/cart/:userId", async (req, res) => {
+
+    try {
+
+        const cart = await Cart.find({
+
+            userId: req.params.userId
+
+        })
+            .populate("productId");
+
+        res.json({
+
+            status: true,
+            total: cart.length,
+            data: cart
+
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+
+            status: false,
+            message: error.message
+
+        });
+
+    }
+
+});
+
+app.delete("/api/cart/:id", async (req, res) => {
+
+    try {
+
+        await Cart.findByIdAndDelete(req.params.id);
+
+        res.json({
+
+            status: true,
+            message: "Item Removed"
 
         });
 
